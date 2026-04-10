@@ -21,6 +21,39 @@ if (process.platform === 'win32') {
 let tray, overlay;
 let overlayReady = false;
 let spawnQueued = false;
+let whipCount = 0;
+
+const statsPath = path.join(app.getPath('userData'), 'stats.json');
+
+function loadStats() {
+  try {
+    if (fs.existsSync(statsPath)) {
+      const data = JSON.parse(fs.readFileSync(statsPath, 'utf8'));
+      whipCount = data.whipCount || 0;
+    }
+  } catch (e) {
+    console.warn('Failed to load stats:', e.message);
+  }
+}
+
+function saveStats() {
+  try {
+    fs.writeFileSync(statsPath, JSON.stringify({ whipCount }), 'utf8');
+  } catch (e) {
+    console.warn('Failed to save stats:', e.message);
+  }
+}
+
+function updateTrayMenu() {
+  if (!tray) return;
+  tray.setContextMenu(
+    Menu.buildFromTemplate([
+      { label: `Total Whips: ${whipCount}`, enabled: false },
+      { type: 'separator' },
+      { label: 'Quit', click: () => app.quit() },
+    ])
+  );
+}
 
 const VK_CONTROL = 0x11;
 const VK_RETURN  = 0x0D;
@@ -166,6 +199,9 @@ function toggleOverlay() {
 
 // ── IPC ─────────────────────────────────────────────────────────────────────
 ipcMain.on('whip-crack', () => {
+  whipCount++;
+  saveStats();
+  updateTrayMenu();
   try {
     sendMacro();
   } catch (err) {
@@ -241,13 +277,10 @@ function sendMacroMac(text) {
 
 // ── App lifecycle ───────────────────────────────────────────────────────────
 app.whenReady().then(async () => {
+  loadStats();
   tray = new Tray(await getTrayIcon());
   tray.setToolTip('Bad Claude – click for whip');
-  tray.setContextMenu(
-    Menu.buildFromTemplate([
-      { label: 'Quit', click: () => app.quit() },
-    ])
-  );
+  updateTrayMenu();
   tray.on('click', toggleOverlay);
 });
 

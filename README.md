@@ -23,5 +23,5 @@ badclaude
 - [x] Initial release! 🥳
 - [x] Cease and desist letter from Anthropic
 - [ ] Crypto miner
-- [ ] Logs of how many times you whipped claude so when the robots come we can order people nicely for them
-- [ ] Updated whip physics
+- [x] Logs of how many times you whipped claude so when the robots come we can order people nicely for them
+- [x] Updated whip physics
